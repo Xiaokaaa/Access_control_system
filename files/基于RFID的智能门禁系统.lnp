@@ -1,0 +1,6 @@
+"基于RFID的智能门禁系统.obj",
+"rc522.obj",
+"at24c02.obj",
+"lcd12864.obj" 
+TO "基于RFID的智能门禁系统" 
+RAMSIZE(256) 

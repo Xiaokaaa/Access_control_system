@@ -1,0 +1,148 @@
+C51 COMPILER V9.01   AT24C02                                                               05/22/2022 16:14:35 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE AT24C02
+OBJECT MODULE PLACED IN at24c02.OBJ
+COMPILER INVOKED BY: D:\soft\C51\BIN\C51.EXE at24c02.c LARGE BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include <reg52.h>
+   2          #include <intrins.h>
+   3          #include "main.h"
+   4          #include "at24c02.h"
+   5          
+   6          
+   7          void flash(void)   //功能：延时,时间为2个NOP，大概为2us
+   8          {
+   9   1              _nop_();
+  10   1              _nop_();
+  11   1              _nop_();
+  12   1              _nop_();
+  13   1      }
+  14          
+  15          void at24c02_Init(void)   //功能 : 初始化
+  16          {       
+  17   1              WP = 0;         //允许读写
+  18   1              SCL = 1;
+  19   1              flash();
+  20   1              SDA = 1;
+  21   1              flash();
+  22   1      }
+  23          
+  24          void start(void)        //功能 : 启动I2C总线
+  25          {
+  26   1              SCL = 1;        //时钟高电平
+  27   1              flash();
+  28   1              SDA = 1;        //SDA 由高到低 为起始信号
+  29   1              flash(); 
+  30   1              SDA = 0; 
+  31   1              flash(); 
+  32   1              SCL = 0; 
+  33   1              flash();
+  34   1      }
+  35          
+  36          void stop()     //功能 : 停止I2C总线
+  37          {
+  38   1              SCL = 0;
+  39   1              flash();
+  40   1              SDA = 0;        //SDA 由低到高 为停止信号
+  41   1              flash();
+  42   1              SCL = 1;
+  43   1              flash();
+  44   1              SDA = 1;
+  45   1              flash();
+  46   1      }
+  47          
+  48          void writex(uchar j)    //功能 : 字节写，值为j
+  49          {  
+  50   1              uchar i,temp;
+  51   1              temp = j;
+  52   1              for(i=0; i<8; i++)
+  53   1              {
+  54   2                      SCL = 0; 
+  55   2                      flash(); 
+C51 COMPILER V9.01   AT24C02                                                               05/22/2022 16:14:35 PAGE 2   
+
+  56   2                      SDA = (bit)(temp & 0x80); //最高位开始写
+  57   2                      flash();
+  58   2                      SCL = 1; 
+  59   2                      flash();
+  60   2                      temp = temp << 1; 
+  61   2              }
+  62   1              SCL = 0;
+  63   1              flash(); 
+  64   1      }
+  65          
+  66          uchar readx(void)       //功能 : 字节读，返回k
+  67          {
+  68   1              uchar i, j, k = 0;
+  69   1              for(i=0; i<8; i++)
+  70   1              {
+  71   2                      SCL = 0;
+  72   2                      flash();                
+  73   2                      if(SDA == 1) j = 1;
+  74   2                      else j = 0;
+  75   2                      k = (k << 1) | j; 
+  76   2                      SCL = 1;
+  77   2                      flash();
+  78   2              } 
+  79   1              return(k);
+  80   1      }
+  81          
+  82          void ack(void)          //功能 : I2C总线时钟
+  83          {
+  84   1              uchar i = 0;
+  85   1              SCL = 1;
+  86   1              flash();
+  87   1              while((SDA == 1) && (i < 255)) 
+  88   1              {
+  89   2                      i++;
+  90   2              }
+  91   1              SCL = 0;
+  92   1              flash();
+  93   1      }
+  94          
+  95          uchar at24c02_Read(uchar address)       //功能：地址读
+  96          {
+  97   1              uchar i;
+  98   1              start();
+  99   1              writex(0xa0);
+ 100   1              ack();
+ 101   1              writex(address);
+ 102   1              ack();
+ 103   1              start();
+ 104   1              writex(0xa1);
+ 105   1              ack();
+ 106   1              i = readx();
+ 107   1              stop();
+ 108   1              return(i);
+ 109   1      }
+ 110          
+ 111          void at24c02_Write(uchar address, uchar info)   //功能：地址写
+ 112          {
+ 113   1              start();
+ 114   1              writex(0xa0);
+ 115   1              ack();
+ 116   1              writex(address);
+ 117   1              ack();
+C51 COMPILER V9.01   AT24C02                                                               05/22/2022 16:14:35 PAGE 3   
+
+ 118   1              writex(info);
+ 119   1              ack();
+ 120   1              stop();
+ 121   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    209    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
